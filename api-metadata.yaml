@@ -1,0 +1,14 @@
+      name: identity-service
+      owner:
+        team: identity-platform
+        email: identity@meridianfs.example
+        slack: "#identity-api"
+        pager_duty: https://meridianfs.pagerduty.example/identity-oncall
+      classification: Restricted
+      pii: true
+      sla_tier: Tier-1
+      regulatory_scope: [SOC-2, GDPR]
+      lifecycle: production
+      consumers:
+        - ledger-service
+- payments-service

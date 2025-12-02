@@ -1,0 +1,958 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Meridian Identity API",
+    "summary": "KYC/KYB identity verification and short-lived auth token issuance for the Meridian platform.",
+    "description": "# Overview\n\nKYC/KYB identity verification and short-lived auth token issuance for the Meridian platform.\n\nThis API is owned by the **identity** team at Meridian Financial Services. It interoperates with **ledger-service**, **payments-service** in the broader Meridian platform. Data classification is **Restricted** and the SLA tier is **Tier-1**.\n\n# Getting started\n\nAll requests require OAuth 2.0 client credentials. Exchange your client ID and secret at `https://auth.meridianfs.example/oauth2/token`. Include the resulting access token as `Authorization: Bearer <token>` on every request.\n\n# Versioning\n\nURL path versioning (`/v1`, `/v2`). Breaking changes require a new major version with a 12-month deprecation overlap.\n\n# Support\n\n- Slack: #identity-api\n- PagerDuty: identity-oncall\n- Email: identity@meridianfs.example\n",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Meridian Identity Team",
+      "email": "identity@meridianfs.example",
+      "url": "https://developers.meridianfs.example/identity-service"
+    },
+    "license": {
+      "name": "Proprietary – Meridian Financial Services",
+      "url": "https://meridianfs.example/legal/api-terms"
+    },
+    "termsOfService": "https://meridianfs.example/legal/api-terms",
+    "x-meridian-owner": "identity-platform",
+    "x-meridian-slack-channel": "identity-api",
+    "x-meridian-pager-duty": "https://meridianfs.pagerduty.example/identity-oncall",
+    "x-meridian-data-classification": "Restricted",
+    "x-meridian-pii": true,
+    "x-meridian-sla-tier": "Tier-1",
+    "x-meridian-regulatory-scope": [
+      "SOC-2",
+      "GDPR"
+    ]
+  },
+  "servers": [
+    {
+      "url": "https://api.meridianfs.example/identity/v1",
+      "description": "Production"
+    },
+    {
+      "url": "https://api.sandbox.meridianfs.example/identity/v1",
+      "description": "Sandbox (test data, no real money movement)"
+    },
+    {
+      "url": "{mockServerUrl}",
+      "description": "Postman mock server (filled at deploy time)",
+      "variables": {
+        "mockServerUrl": {
+          "default": "https://placeholder.mock.pstmn.io"
+        }
+      }
+    }
+  ],
+  "tags": [
+    {
+      "name": "Identity",
+      "description": "Identity resources. The primary object this API manages."
+    },
+    {
+      "name": "Webhooks",
+      "description": "Events emitted by this service."
+    }
+  ],
+  "security": [
+    {
+      "OAuth2ClientCredentials": [
+        "read",
+        "write"
+      ]
+    },
+    {
+      "ApiKeyAuth": []
+    }
+  ],
+  "paths": {
+    "/identities": {
+      "get": {
+        "summary": "List identities",
+        "description": "List identities. This endpoint is part of the identity team's public surface. See the 'Getting started' section for auth requirements and error semantics.",
+        "tags": [
+          "Identity"
+        ],
+        "operationId": "listIdentities",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Cursor"
+          },
+          {
+            "$ref": "#/components/parameters/Limit"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filter by lifecycle status.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "completed",
+                "failed"
+              ]
+            },
+            "example": "completed"
+          },
+          {
+            "name": "created_after",
+            "in": "query",
+            "description": "ISO-8601 timestamp. Only return resources created at or after this time.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "example": "2026-01-01T00:00:00Z"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityList"
+                },
+                "examples": {
+                  "typical": {
+                    "summary": "Typical response",
+                    "value": {
+                      "data": [
+                        {
+                          "id": "idt_01HXYZ4DCDD305F868443C8E",
+                          "created_at": "2026-04-21T14:30:00Z",
+                          "updated_at": "2026-04-21T15:00:00Z",
+                          "status": "completed",
+                          "legal_name": "Jordan Alvarez",
+                          "email": "jordan@example.com",
+                          "kyc_status": "approved",
+                          "country": "US"
+                        }
+                      ],
+                      "has_more": false,
+                      "next_cursor": null
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      },
+      "post": {
+        "summary": "Register a new identity",
+        "description": "Register a new identity. This endpoint is part of the identity team's public surface. See the 'Getting started' section for auth requirements and error semantics.",
+        "tags": [
+          "Identity"
+        ],
+        "operationId": "createIdentity",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IdentityCreateRequest"
+              },
+              "examples": {
+                "typical": {
+                  "summary": "Standard request",
+                  "value": {
+                    "legal_name": "Jordan Alvarez",
+                    "email": "jordan@example.com",
+                    "country": "US"
+                  }
+                },
+                "edge_case": {
+                  "summary": "Edge case with optional fields populated",
+                  "value": {
+                    "legal_name": "Jordan Alvarez",
+                    "email": "jordan@example.com",
+                    "country": "US"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Identity"
+                },
+                "examples": {
+                  "typical": {
+                    "summary": "Typical response",
+                    "value": {
+                      "id": "idt_01HXYZ544E0D76D6B04B37A3",
+                      "created_at": "2026-04-21T14:30:00Z",
+                      "updated_at": "2026-04-21T15:00:00Z",
+                      "status": "completed",
+                      "legal_name": "Jordan Alvarez",
+                      "email": "jordan@example.com",
+                      "kyc_status": "approved",
+                      "country": "US"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/identities/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^idt_[A-Za-z0-9]+$"
+          },
+          "description": "Unique identity identifier.",
+          "example": "idt_01HXYZ29CA82BA14174828B2"
+        }
+      ],
+      "get": {
+        "summary": "Retrieve an identity",
+        "description": "Retrieve an identity. This endpoint is part of the identity team's public surface. See the 'Getting started' section for auth requirements and error semantics.",
+        "tags": [
+          "Identity"
+        ],
+        "operationId": "getIdentity",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Identity"
+                },
+                "examples": {
+                  "typical": {
+                    "summary": "Typical response",
+                    "value": {
+                      "id": "idt_01HXYZBE4FAB536E78478B9D",
+                      "created_at": "2026-04-21T14:30:00Z",
+                      "updated_at": "2026-04-21T15:00:00Z",
+                      "status": "completed",
+                      "legal_name": "Jordan Alvarez",
+                      "email": "jordan@example.com",
+                      "kyc_status": "approved",
+                      "country": "US"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/identities/{id}/kyc": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^idt_[A-Za-z0-9]+$"
+          },
+          "description": "Unique identity identifier.",
+          "example": "idt_01HXYZ2C8A3A9890B14CE298"
+        }
+      ],
+      "post": {
+        "summary": "Start a KYC check",
+        "description": "Start a KYC check. This endpoint is part of the identity team's public surface. See the 'Getting started' section for auth requirements and error semantics.",
+        "tags": [
+          "Identity"
+        ],
+        "operationId": "startKyc",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IdentityCreateRequest"
+              },
+              "examples": {
+                "typical": {
+                  "summary": "Standard request",
+                  "value": {
+                    "legal_name": "Jordan Alvarez",
+                    "email": "jordan@example.com",
+                    "country": "US"
+                  }
+                },
+                "edge_case": {
+                  "summary": "Edge case with optional fields populated",
+                  "value": {
+                    "legal_name": "Jordan Alvarez",
+                    "email": "jordan@example.com",
+                    "country": "US"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Identity"
+                },
+                "examples": {
+                  "typical": {
+                    "summary": "Typical response",
+                    "value": {
+                      "id": "idt_01HXYZ213096D6BBFA49ECA4",
+                      "created_at": "2026-04-21T14:30:00Z",
+                      "updated_at": "2026-04-21T15:00:00Z",
+                      "status": "completed",
+                      "legal_name": "Jordan Alvarez",
+                      "email": "jordan@example.com",
+                      "kyc_status": "approved",
+                      "country": "US"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      },
+      "get": {
+        "summary": "Get KYC status",
+        "description": "Get KYC status. This endpoint is part of the identity team's public surface. See the 'Getting started' section for auth requirements and error semantics.",
+        "tags": [
+          "Identity"
+        ],
+        "operationId": "getKycStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Identity"
+                },
+                "examples": {
+                  "typical": {
+                    "summary": "Typical response",
+                    "value": {
+                      "id": "idt_01HXYZEFBD64B8214A4370B9",
+                      "created_at": "2026-04-21T14:30:00Z",
+                      "updated_at": "2026-04-21T15:00:00Z",
+                      "status": "completed",
+                      "legal_name": "Jordan Alvarez",
+                      "email": "jordan@example.com",
+                      "kyc_status": "approved",
+                      "country": "US"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/identities/{id}/sensitive": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^idt_[A-Za-z0-9]+$"
+          },
+          "description": "Unique identity identifier.",
+          "example": "idt_01HXYZEBD698E4CE0247D4B0"
+        }
+      ],
+      "get": {
+        "summary": "Retrieve PII (audited)",
+        "description": "Retrieve PII (audited). This endpoint is part of the identity team's public surface. See the 'Getting started' section for auth requirements and error semantics.",
+        "tags": [
+          "Identity"
+        ],
+        "operationId": "getSensitiveData",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Identity"
+                },
+                "examples": {
+                  "typical": {
+                    "summary": "Typical response",
+                    "value": {
+                      "id": "idt_01HXYZ5B1A057BEFED4DA18E",
+                      "created_at": "2026-04-21T14:30:00Z",
+                      "updated_at": "2026-04-21T15:00:00Z",
+                      "status": "completed",
+                      "legal_name": "Jordan Alvarez",
+                      "email": "jordan@example.com",
+                      "kyc_status": "approved",
+                      "country": "US"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/tokens": {
+      "post": {
+        "summary": "Issue a short-lived access token",
+        "description": "Issue a short-lived access token. This endpoint is part of the identity team's public surface. See the 'Getting started' section for auth requirements and error semantics.",
+        "tags": [
+          "Identity"
+        ],
+        "operationId": "issueToken",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IdentityCreateRequest"
+              },
+              "examples": {
+                "typical": {
+                  "summary": "Standard request",
+                  "value": {
+                    "legal_name": "Jordan Alvarez",
+                    "email": "jordan@example.com",
+                    "country": "US"
+                  }
+                },
+                "edge_case": {
+                  "summary": "Edge case with optional fields populated",
+                  "value": {
+                    "legal_name": "Jordan Alvarez",
+                    "email": "jordan@example.com",
+                    "country": "US"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Identity"
+                },
+                "examples": {
+                  "typical": {
+                    "summary": "Typical response",
+                    "value": {
+                      "id": "idt_01HXYZ34F668838D8844348A",
+                      "created_at": "2026-04-21T14:30:00Z",
+                      "updated_at": "2026-04-21T15:00:00Z",
+                      "status": "completed",
+                      "legal_name": "Jordan Alvarez",
+                      "email": "jordan@example.com",
+                      "kyc_status": "approved",
+                      "country": "US"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    }
+  },
+  "webhooks": {
+    "kyc.completed": {
+      "post": {
+        "summary": "Fired when a kyc completed event occurs",
+        "description": "Meridian POSTs this event to your configured webhook URL. Verify the `X-Meridian-Signature` header using your webhook secret.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IdentityEvent"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Event acknowledged"
+          }
+        }
+      }
+    },
+    "identity.updated": {
+      "post": {
+        "summary": "Fired when a identity updated event occurs",
+        "description": "Meridian POSTs this event to your configured webhook URL. Verify the `X-Meridian-Signature` header using your webhook secret.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IdentityEvent"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Event acknowledged"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "OAuth2ClientCredentials": {
+        "type": "oauth2",
+        "flows": {
+          "clientCredentials": {
+            "tokenUrl": "https://auth.meridianfs.example/oauth2/token",
+            "scopes": {
+              "read": "Read access",
+              "write": "Write access"
+            }
+          }
+        }
+      },
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "Server-to-server API key. Use OAuth 2.0 for interactive contexts."
+      }
+    },
+    "parameters": {
+      "Cursor": {
+        "name": "cursor",
+        "in": "query",
+        "description": "Opaque cursor from a previous response's `next_cursor` field.",
+        "required": false,
+        "schema": {
+          "type": "string"
+        },
+        "example": "eyJ0eXAiOi..."
+      },
+      "Limit": {
+        "name": "limit",
+        "in": "query",
+        "description": "Maximum number of items to return. Defaults to 25, max 100.",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 25
+        },
+        "example": 25
+      },
+      "IdempotencyKey": {
+        "name": "Idempotency-Key",
+        "in": "header",
+        "required": true,
+        "description": "Unique key (UUID v4 recommended) that makes this request safe to retry. Retries within 24 hours return the original response.",
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "example": "7f3e8a12-9b4c-4d5e-a8f1-2c3d4e5f6a7b"
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Malformed request",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Missing or invalid credentials",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Resource not found",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            }
+          }
+        }
+      },
+      "Conflict": {
+        "description": "Conflicts with current state",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            }
+          }
+        }
+      },
+      "Unprocessable": {
+        "description": "Semantically invalid request",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            }
+          }
+        }
+      },
+      "RateLimited": {
+        "description": "Too many requests",
+        "headers": {
+          "Retry-After": {
+            "description": "Seconds to wait.",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Problem": {
+        "description": "RFC 9457 Problem Details for HTTP APIs.",
+        "type": "object",
+        "required": [
+          "type",
+          "title",
+          "status"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "format": "uri",
+            "description": "URI identifying the problem type.",
+            "example": "https://errors.meridianfs.example/validation"
+          },
+          "title": {
+            "type": "string",
+            "description": "Short human-readable summary.",
+            "example": "Validation failed"
+          },
+          "status": {
+            "type": "integer",
+            "description": "HTTP status code.",
+            "example": 422
+          },
+          "detail": {
+            "type": "string",
+            "description": "Human-readable explanation.",
+            "example": "The `amount` field must be a positive integer."
+          },
+          "instance": {
+            "type": "string",
+            "format": "uri-reference",
+            "description": "URI of this occurrence.",
+            "example": "/v1/identities/idt_01HXYZDCC1929CB8434979A3/capture"
+          },
+          "correlation_id": {
+            "type": "string",
+            "description": "Meridian correlation ID.",
+            "example": "cor_01HXYZABCDEFG"
+          }
+        }
+      },
+      "Identity": {
+        "description": "A Meridian identity resource.",
+        "type": "object",
+        "required": [
+          "id",
+          "created_at",
+          "status"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^idt_[A-Za-z0-9]+$",
+            "description": "Unique identity identifier.",
+            "example": "idt_01HXYZE2A8FB4AB7A948209C"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation timestamp.",
+            "example": "2026-04-21T14:30:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last update timestamp.",
+            "example": "2026-04-21T15:00:00Z"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "completed",
+              "failed"
+            ],
+            "description": "Current lifecycle status.",
+            "example": "completed"
+          },
+          "legal_name": {
+            "type": "string",
+            "description": "Full legal name.",
+            "example": "Jordan Alvarez"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Contact email.",
+            "example": "jordan@example.com"
+          },
+          "kyc_status": {
+            "type": "string",
+            "enum": [
+              "not_started",
+              "pending",
+              "approved",
+              "denied"
+            ],
+            "description": "Current KYC state.",
+            "example": "approved"
+          },
+          "country": {
+            "type": "string",
+            "description": "ISO-3166-1 alpha-2 country code.",
+            "example": "US"
+          }
+        }
+      },
+      "IdentityCreateRequest": {
+        "description": "Payload for creating a identity.",
+        "type": "object",
+        "required": [
+          "legal_name",
+          "email",
+          "country"
+        ],
+        "properties": {
+          "legal_name": {
+            "type": "string",
+            "description": "Full legal name.",
+            "example": "Jordan Alvarez"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Contact email.",
+            "example": "jordan@example.com"
+          },
+          "country": {
+            "type": "string",
+            "description": "ISO-3166-1 alpha-2 country code.",
+            "example": "US"
+          }
+        }
+      },
+      "IdentityList": {
+        "description": "Paginated list of identitys.",
+        "type": "object",
+        "required": [
+          "data",
+          "has_more"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Identity"
+            },
+            "description": "Page contents."
+          },
+          "has_more": {
+            "type": "boolean",
+            "description": "True if more pages exist.",
+            "example": false
+          },
+          "next_cursor": {
+            "type": "string",
+            "nullable": true,
+            "description": "Cursor for next page.",
+            "example": null
+          }
+        }
+      },
+      "IdentityEvent": {
+        "description": "Webhook envelope for identity events.",
+        "type": "object",
+        "required": [
+          "id",
+          "type",
+          "created_at",
+          "data"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique event ID.",
+            "example": "evt_01HXYZ"
+          },
+          "type": {
+            "type": "string",
+            "description": "Event type.",
+            "example": "kyc.completed"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Event emission time.",
+            "example": "2026-04-21T14:30:00Z"
+          },
+          "data": {
+            "$ref": "#/components/schemas/Identity"
+          }
+        }
+      }
+    }
+  }
+}

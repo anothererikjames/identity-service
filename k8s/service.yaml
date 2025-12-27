@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: identity-service
+  namespace: meridian
+spec:
+  selector: { app: identity-service }
+  ports:
+  - port: 3001
+    targetPort: 3001

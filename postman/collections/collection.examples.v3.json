@@ -1,0 +1,1855 @@
+{
+  "info": {
+    "name": "Meridian – Identity – Examples",
+    "description": "KYC/KYB identity verification and short-lived auth token issuance for the Meridian platform.\n\n## Purpose\n\nExamples collection — saved responses powering the Postman mock server and the CI Local Mocks.\n\n## Consumers\n\n- Dependent services (via Local Mocks in CI)\n- External integrators exploring via the mock server",
+    "schema": "https://schema.postman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "21a7aa8d-2a41-4e09-b509-165bfa90a854"
+  },
+  "auth": {
+    "type": "oauth2",
+    "oauth2": [
+      {
+        "key": "grant_type",
+        "value": "client_credentials",
+        "type": "string"
+      },
+      {
+        "key": "accessTokenUrl",
+        "value": "https://auth.meridianfs.example/oauth2/token",
+        "type": "string"
+      },
+      {
+        "key": "clientId",
+        "value": "{{client_id}}",
+        "type": "string"
+      },
+      {
+        "key": "clientSecret",
+        "value": "{{client_secret}}",
+        "type": "string"
+      },
+      {
+        "key": "scope",
+        "value": "read write",
+        "type": "string"
+      },
+      {
+        "key": "tokenName",
+        "value": "meridian-access-token",
+        "type": "string"
+      },
+      {
+        "key": "addTokenTo",
+        "value": "header",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Generate fresh Idempotency-Key for mutating requests",
+          "if (['POST','PUT','PATCH','DELETE'].indexOf(pm.request.method) !== -1) {",
+          "  pm.request.headers.upsert({key:'Idempotency-Key', value: pm.variables.replaceIn('{{$guid}}')});",
+          "}",
+          "// Correlation ID for Repro Mode",
+          "pm.request.headers.upsert({key:'X-Correlation-Id', value: pm.variables.replaceIn('cor_{{$guid}}')});"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "{{base_url}}",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "GET /identities",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text",
+            "description": {
+              "content": "Request body MIME type.",
+              "type": "text/plain"
+            }
+          },
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text",
+            "description": {
+              "content": "Desired response MIME type.",
+              "type": "text/plain"
+            }
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/identities",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "identities"
+          ],
+          "query": [
+            {
+              "key": "limit",
+              "value": "25",
+              "disabled": true,
+              "description": "Maximum items per page (1-100)."
+            },
+            {
+              "key": "cursor",
+              "value": "",
+              "disabled": true,
+              "description": "Opaque cursor from previous page's next_cursor."
+            },
+            {
+              "key": "status",
+              "value": "completed",
+              "disabled": true,
+              "description": "Filter by lifecycle status."
+            }
+          ]
+        },
+        "description": "List identities\n\n### Auth\n\nOAuth 2.0 client credentials. Scope: `read`.\n\n### Notes\n\nCorrelation ID is auto-injected by the pre-request script.",
+        "auth": {
+          "type": "oauth2"
+        },
+        "response": [
+          {
+            "name": "Success 200",
+            "originalRequest": {
+              "method": "GET",
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                }
+              ],
+              "url": {
+                "raw": "{{base_url}}/identities",
+                "host": [
+                  "{{base_url}}"
+                ],
+                "path": [
+                  "identities"
+                ]
+              }
+            },
+            "status": "OK",
+            "code": 200,
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": "{\n  \"data\": [\n    {\n      \"id\": \"idt_01HXYZE5F6F8E686A14EAF81\",\n      \"created_at\": \"2026-04-21T14:30:00Z\",\n      \"updated_at\": \"2026-04-21T15:00:00Z\",\n      \"status\": \"completed\",\n      \"legal_name\": \"Jordan Alvarez\",\n      \"email\": \"jordan@example.com\",\n      \"kyc_status\": \"approved\",\n      \"country\": \"US\"\n    }\n  ],\n  \"has_more\": false,\n  \"next_cursor\": null\n}",
+            "_postman_previewlanguage": "json"
+          },
+          {
+            "name": "Validation error 422",
+            "originalRequest": {
+              "method": "GET",
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                }
+              ],
+              "url": {
+                "raw": "{{base_url}}/identities",
+                "host": [
+                  "{{base_url}}"
+                ],
+                "path": [
+                  "identities"
+                ]
+              }
+            },
+            "status": "Unprocessable Entity",
+            "code": 422,
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/problem+json"
+              }
+            ],
+            "body": "{\n  \"type\": \"https://errors.meridianfs.example/validation\",\n  \"title\": \"Validation failed\",\n  \"status\": 422,\n  \"detail\": \"The `amount_minor` field must be a positive integer.\",\n  \"correlation_id\": \"cor_01HXYZABCDEFG\"\n}"
+          },
+          {
+            "name": "Rate limited 429",
+            "originalRequest": {
+              "method": "GET",
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                }
+              ],
+              "url": {
+                "raw": "{{base_url}}/identities",
+                "host": [
+                  "{{base_url}}"
+                ],
+                "path": [
+                  "identities"
+                ]
+              }
+            },
+            "status": "Too Many Requests",
+            "code": 429,
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/problem+json"
+              },
+              {
+                "key": "Retry-After",
+                "value": "5"
+              }
+            ],
+            "body": "{\n  \"type\": \"https://errors.meridianfs.example/rate-limit\",\n  \"title\": \"Too many requests\",\n  \"status\": 429,\n  \"detail\": \"Retry after 5 seconds.\"\n}"
+          }
+        ]
+      },
+      "response": [
+        {
+          "name": "Success 200",
+          "originalRequest": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/identities",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "identities"
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"data\": [\n    {\n      \"id\": \"idt_01HXYZE5F6F8E686A14EAF81\",\n      \"created_at\": \"2026-04-21T14:30:00Z\",\n      \"updated_at\": \"2026-04-21T15:00:00Z\",\n      \"status\": \"completed\",\n      \"legal_name\": \"Jordan Alvarez\",\n      \"email\": \"jordan@example.com\",\n      \"kyc_status\": \"approved\",\n      \"country\": \"US\"\n    }\n  ],\n  \"has_more\": false,\n  \"next_cursor\": null\n}",
+          "_postman_previewlanguage": "json",
+          "id": "e0a76e24-c5d7-44fe-9e62-40a8ee2edbbc"
+        },
+        {
+          "name": "Validation error 422",
+          "originalRequest": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/identities",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "identities"
+              ]
+            }
+          },
+          "status": "Unprocessable Entity",
+          "code": 422,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/problem+json"
+            }
+          ],
+          "body": "{\n  \"type\": \"https://errors.meridianfs.example/validation\",\n  \"title\": \"Validation failed\",\n  \"status\": 422,\n  \"detail\": \"The `amount_minor` field must be a positive integer.\",\n  \"correlation_id\": \"cor_01HXYZABCDEFG\"\n}",
+          "id": "1ee18bb3-3640-494f-b475-85f4a70e8e3f"
+        },
+        {
+          "name": "Rate limited 429",
+          "originalRequest": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/identities",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "identities"
+              ]
+            }
+          },
+          "status": "Too Many Requests",
+          "code": 429,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/problem+json"
+            },
+            {
+              "key": "Retry-After",
+              "value": "5"
+            }
+          ],
+          "body": "{\n  \"type\": \"https://errors.meridianfs.example/rate-limit\",\n  \"title\": \"Too many requests\",\n  \"status\": 429,\n  \"detail\": \"Retry after 5 seconds.\"\n}",
+          "id": "b9eb02c6-02b2-4c03-be84-1a8ea301f763"
+        }
+      ],
+      "id": "c8fb46de-67d3-40a8-846e-59cec0da9884"
+    },
+    {
+      "name": "POST /identities",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text",
+            "description": {
+              "content": "Request body MIME type.",
+              "type": "text/plain"
+            }
+          },
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text",
+            "description": {
+              "content": "Desired response MIME type.",
+              "type": "text/plain"
+            }
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{$guid}}",
+            "type": "text",
+            "description": {
+              "content": "Unique key making this request safe to retry. UUID v4.",
+              "type": "text/plain"
+            }
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/identities",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "identities"
+          ]
+        },
+        "description": "Register a new identity\n\n### Auth\n\nOAuth 2.0 client credentials. Scope: `write`.\n\n### Notes\n\nCorrelation ID is auto-injected by the pre-request script.",
+        "auth": {
+          "type": "oauth2"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"legal_name\": \"Jordan Alvarez\",\n  \"email\": \"jordan@example.com\",\n  \"country\": \"US\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "response": [
+          {
+            "name": "Success 201",
+            "originalRequest": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                }
+              ],
+              "url": {
+                "raw": "{{base_url}}/identities",
+                "host": [
+                  "{{base_url}}"
+                ],
+                "path": [
+                  "identities"
+                ]
+              }
+            },
+            "status": "Created",
+            "code": 201,
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": "{\n  \"id\": \"idt_01HXYZB17CE4A16407447583\",\n  \"created_at\": \"2026-04-21T14:30:00Z\",\n  \"updated_at\": \"2026-04-21T15:00:00Z\",\n  \"status\": \"completed\",\n  \"legal_name\": \"Jordan Alvarez\",\n  \"email\": \"jordan@example.com\",\n  \"kyc_status\": \"approved\",\n  \"country\": \"US\"\n}",
+            "_postman_previewlanguage": "json"
+          },
+          {
+            "name": "Validation error 422",
+            "originalRequest": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                }
+              ],
+              "url": {
+                "raw": "{{base_url}}/identities",
+                "host": [
+                  "{{base_url}}"
+                ],
+                "path": [
+                  "identities"
+                ]
+              }
+            },
+            "status": "Unprocessable Entity",
+            "code": 422,
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/problem+json"
+              }
+            ],
+            "body": "{\n  \"type\": \"https://errors.meridianfs.example/validation\",\n  \"title\": \"Validation failed\",\n  \"status\": 422,\n  \"detail\": \"The `amount_minor` field must be a positive integer.\",\n  \"correlation_id\": \"cor_01HXYZABCDEFG\"\n}"
+          },
+          {
+            "name": "Rate limited 429",
+            "originalRequest": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                }
+              ],
+              "url": {
+                "raw": "{{base_url}}/identities",
+                "host": [
+                  "{{base_url}}"
+                ],
+                "path": [
+                  "identities"
+                ]
+              }
+            },
+            "status": "Too Many Requests",
+            "code": 429,
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/problem+json"
+              },
+              {
+                "key": "Retry-After",
+                "value": "5"
+              }
+            ],
+            "body": "{\n  \"type\": \"https://errors.meridianfs.example/rate-limit\",\n  \"title\": \"Too many requests\",\n  \"status\": 429,\n  \"detail\": \"Retry after 5 seconds.\"\n}"
+          }
+        ]
+      },
+      "response": [
+        {
+          "name": "Success 201",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/identities",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "identities"
+              ]
+            }
+          },
+          "status": "Created",
+          "code": 201,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"id\": \"idt_01HXYZB17CE4A16407447583\",\n  \"created_at\": \"2026-04-21T14:30:00Z\",\n  \"updated_at\": \"2026-04-21T15:00:00Z\",\n  \"status\": \"completed\",\n  \"legal_name\": \"Jordan Alvarez\",\n  \"email\": \"jordan@example.com\",\n  \"kyc_status\": \"approved\",\n  \"country\": \"US\"\n}",
+          "_postman_previewlanguage": "json",
+          "id": "9d1fd106-3b8c-4c8d-a110-2034f2c85123"
+        },
+        {
+          "name": "Validation error 422",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/identities",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "identities"
+              ]
+            }
+          },
+          "status": "Unprocessable Entity",
+          "code": 422,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/problem+json"
+            }
+          ],
+          "body": "{\n  \"type\": \"https://errors.meridianfs.example/validation\",\n  \"title\": \"Validation failed\",\n  \"status\": 422,\n  \"detail\": \"The `amount_minor` field must be a positive integer.\",\n  \"correlation_id\": \"cor_01HXYZABCDEFG\"\n}",
+          "id": "08a847f0-05ca-4fe1-9a15-0a10776f28b5"
+        },
+        {
+          "name": "Rate limited 429",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/identities",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "identities"
+              ]
+            }
+          },
+          "status": "Too Many Requests",
+          "code": 429,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/problem+json"
+            },
+            {
+              "key": "Retry-After",
+              "value": "5"
+            }
+          ],
+          "body": "{\n  \"type\": \"https://errors.meridianfs.example/rate-limit\",\n  \"title\": \"Too many requests\",\n  \"status\": 429,\n  \"detail\": \"Retry after 5 seconds.\"\n}",
+          "id": "d3993524-6b96-4d0e-91c3-b9eb2ab20075"
+        }
+      ],
+      "id": "b0bea19b-4a59-4725-9b16-5ff22f4767c6"
+    },
+    {
+      "name": "GET /identities/{id}",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text",
+            "description": {
+              "content": "Request body MIME type.",
+              "type": "text/plain"
+            }
+          },
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text",
+            "description": {
+              "content": "Desired response MIME type.",
+              "type": "text/plain"
+            }
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/identities/{{identity_id}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "identities",
+            "{{identity_id}}"
+          ]
+        },
+        "description": "Retrieve an identity\n\n### Auth\n\nOAuth 2.0 client credentials. Scope: `read`.\n\n### Notes\n\nCorrelation ID is auto-injected by the pre-request script.",
+        "auth": {
+          "type": "oauth2"
+        },
+        "response": [
+          {
+            "name": "Success 200",
+            "originalRequest": {
+              "method": "GET",
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                }
+              ],
+              "url": {
+                "raw": "{{base_url}}/identities/{{identity_id}}",
+                "host": [
+                  "{{base_url}}"
+                ],
+                "path": [
+                  "identities",
+                  "{id}"
+                ]
+              }
+            },
+            "status": "OK",
+            "code": 200,
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": "{\n  \"id\": \"idt_01HXYZFA1EE923873641B883\",\n  \"created_at\": \"2026-04-21T14:30:00Z\",\n  \"updated_at\": \"2026-04-21T15:00:00Z\",\n  \"status\": \"completed\",\n  \"legal_name\": \"Jordan Alvarez\",\n  \"email\": \"jordan@example.com\",\n  \"kyc_status\": \"approved\",\n  \"country\": \"US\"\n}",
+            "_postman_previewlanguage": "json"
+          },
+          {
+            "name": "Validation error 422",
+            "originalRequest": {
+              "method": "GET",
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                }
+              ],
+              "url": {
+                "raw": "{{base_url}}/identities/{{identity_id}}",
+                "host": [
+                  "{{base_url}}"
+                ],
+                "path": [
+                  "identities",
+                  "{id}"
+                ]
+              }
+            },
+            "status": "Unprocessable Entity",
+            "code": 422,
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/problem+json"
+              }
+            ],
+            "body": "{\n  \"type\": \"https://errors.meridianfs.example/validation\",\n  \"title\": \"Validation failed\",\n  \"status\": 422,\n  \"detail\": \"The `amount_minor` field must be a positive integer.\",\n  \"correlation_id\": \"cor_01HXYZABCDEFG\"\n}"
+          },
+          {
+            "name": "Rate limited 429",
+            "originalRequest": {
+              "method": "GET",
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                }
+              ],
+              "url": {
+                "raw": "{{base_url}}/identities/{{identity_id}}",
+                "host": [
+                  "{{base_url}}"
+                ],
+                "path": [
+                  "identities",
+                  "{id}"
+                ]
+              }
+            },
+            "status": "Too Many Requests",
+            "code": 429,
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/problem+json"
+              },
+              {
+                "key": "Retry-After",
+                "value": "5"
+              }
+            ],
+            "body": "{\n  \"type\": \"https://errors.meridianfs.example/rate-limit\",\n  \"title\": \"Too many requests\",\n  \"status\": 429,\n  \"detail\": \"Retry after 5 seconds.\"\n}"
+          }
+        ]
+      },
+      "response": [
+        {
+          "name": "Success 200",
+          "originalRequest": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/identities/{{identity_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "identities",
+                "{id}"
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"id\": \"idt_01HXYZFA1EE923873641B883\",\n  \"created_at\": \"2026-04-21T14:30:00Z\",\n  \"updated_at\": \"2026-04-21T15:00:00Z\",\n  \"status\": \"completed\",\n  \"legal_name\": \"Jordan Alvarez\",\n  \"email\": \"jordan@example.com\",\n  \"kyc_status\": \"approved\",\n  \"country\": \"US\"\n}",
+          "_postman_previewlanguage": "json",
+          "id": "d1a022ba-8f04-401f-b605-8dc8de3c1d52"
+        },
+        {
+          "name": "Validation error 422",
+          "originalRequest": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/identities/{{identity_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "identities",
+                "{id}"
+              ]
+            }
+          },
+          "status": "Unprocessable Entity",
+          "code": 422,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/problem+json"
+            }
+          ],
+          "body": "{\n  \"type\": \"https://errors.meridianfs.example/validation\",\n  \"title\": \"Validation failed\",\n  \"status\": 422,\n  \"detail\": \"The `amount_minor` field must be a positive integer.\",\n  \"correlation_id\": \"cor_01HXYZABCDEFG\"\n}",
+          "id": "0ec228e4-f9be-4e01-adf7-889771d598bb"
+        },
+        {
+          "name": "Rate limited 429",
+          "originalRequest": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/identities/{{identity_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "identities",
+                "{id}"
+              ]
+            }
+          },
+          "status": "Too Many Requests",
+          "code": 429,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/problem+json"
+            },
+            {
+              "key": "Retry-After",
+              "value": "5"
+            }
+          ],
+          "body": "{\n  \"type\": \"https://errors.meridianfs.example/rate-limit\",\n  \"title\": \"Too many requests\",\n  \"status\": 429,\n  \"detail\": \"Retry after 5 seconds.\"\n}",
+          "id": "bfaaa715-86cb-49eb-ba13-9383aa1943f0"
+        }
+      ],
+      "id": "e6ecc3ea-8bd8-440d-b1a1-c221c62ef937"
+    },
+    {
+      "name": "POST /identities/{id}/kyc",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text",
+            "description": {
+              "content": "Request body MIME type.",
+              "type": "text/plain"
+            }
+          },
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text",
+            "description": {
+              "content": "Desired response MIME type.",
+              "type": "text/plain"
+            }
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{$guid}}",
+            "type": "text",
+            "description": {
+              "content": "Unique key making this request safe to retry. UUID v4.",
+              "type": "text/plain"
+            }
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/identities/{{identity_id}}/kyc",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "identities",
+            "{{identity_id}}",
+            "kyc"
+          ]
+        },
+        "description": "Start a KYC check\n\n### Auth\n\nOAuth 2.0 client credentials. Scope: `write`.\n\n### Notes\n\nCorrelation ID is auto-injected by the pre-request script.",
+        "auth": {
+          "type": "oauth2"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"legal_name\": \"Jordan Alvarez\",\n  \"email\": \"jordan@example.com\",\n  \"country\": \"US\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "response": [
+          {
+            "name": "Success 201",
+            "originalRequest": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                }
+              ],
+              "url": {
+                "raw": "{{base_url}}/identities/{{identity_id}}/kyc",
+                "host": [
+                  "{{base_url}}"
+                ],
+                "path": [
+                  "identities",
+                  "{id}",
+                  "kyc"
+                ]
+              }
+            },
+            "status": "Created",
+            "code": 201,
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": "{\n  \"id\": \"idt_01HXYZ913C53C5B5DE4A17A4\",\n  \"created_at\": \"2026-04-21T14:30:00Z\",\n  \"updated_at\": \"2026-04-21T15:00:00Z\",\n  \"status\": \"completed\",\n  \"legal_name\": \"Jordan Alvarez\",\n  \"email\": \"jordan@example.com\",\n  \"kyc_status\": \"approved\",\n  \"country\": \"US\"\n}",
+            "_postman_previewlanguage": "json"
+          },
+          {
+            "name": "Validation error 422",
+            "originalRequest": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                }
+              ],
+              "url": {
+                "raw": "{{base_url}}/identities/{{identity_id}}/kyc",
+                "host": [
+                  "{{base_url}}"
+                ],
+                "path": [
+                  "identities",
+                  "{id}",
+                  "kyc"
+                ]
+              }
+            },
+            "status": "Unprocessable Entity",
+            "code": 422,
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/problem+json"
+              }
+            ],
+            "body": "{\n  \"type\": \"https://errors.meridianfs.example/validation\",\n  \"title\": \"Validation failed\",\n  \"status\": 422,\n  \"detail\": \"The `amount_minor` field must be a positive integer.\",\n  \"correlation_id\": \"cor_01HXYZABCDEFG\"\n}"
+          },
+          {
+            "name": "Rate limited 429",
+            "originalRequest": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                }
+              ],
+              "url": {
+                "raw": "{{base_url}}/identities/{{identity_id}}/kyc",
+                "host": [
+                  "{{base_url}}"
+                ],
+                "path": [
+                  "identities",
+                  "{id}",
+                  "kyc"
+                ]
+              }
+            },
+            "status": "Too Many Requests",
+            "code": 429,
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/problem+json"
+              },
+              {
+                "key": "Retry-After",
+                "value": "5"
+              }
+            ],
+            "body": "{\n  \"type\": \"https://errors.meridianfs.example/rate-limit\",\n  \"title\": \"Too many requests\",\n  \"status\": 429,\n  \"detail\": \"Retry after 5 seconds.\"\n}"
+          }
+        ]
+      },
+      "response": [
+        {
+          "name": "Success 201",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/identities/{{identity_id}}/kyc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "identities",
+                "{id}",
+                "kyc"
+              ]
+            }
+          },
+          "status": "Created",
+          "code": 201,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"id\": \"idt_01HXYZ913C53C5B5DE4A17A4\",\n  \"created_at\": \"2026-04-21T14:30:00Z\",\n  \"updated_at\": \"2026-04-21T15:00:00Z\",\n  \"status\": \"completed\",\n  \"legal_name\": \"Jordan Alvarez\",\n  \"email\": \"jordan@example.com\",\n  \"kyc_status\": \"approved\",\n  \"country\": \"US\"\n}",
+          "_postman_previewlanguage": "json",
+          "id": "7e935bb4-377a-4a19-9daf-8d4fc5c60e36"
+        },
+        {
+          "name": "Validation error 422",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/identities/{{identity_id}}/kyc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "identities",
+                "{id}",
+                "kyc"
+              ]
+            }
+          },
+          "status": "Unprocessable Entity",
+          "code": 422,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/problem+json"
+            }
+          ],
+          "body": "{\n  \"type\": \"https://errors.meridianfs.example/validation\",\n  \"title\": \"Validation failed\",\n  \"status\": 422,\n  \"detail\": \"The `amount_minor` field must be a positive integer.\",\n  \"correlation_id\": \"cor_01HXYZABCDEFG\"\n}",
+          "id": "7bb06f6f-448d-408b-b2f3-7af9708d1bc4"
+        },
+        {
+          "name": "Rate limited 429",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/identities/{{identity_id}}/kyc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "identities",
+                "{id}",
+                "kyc"
+              ]
+            }
+          },
+          "status": "Too Many Requests",
+          "code": 429,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/problem+json"
+            },
+            {
+              "key": "Retry-After",
+              "value": "5"
+            }
+          ],
+          "body": "{\n  \"type\": \"https://errors.meridianfs.example/rate-limit\",\n  \"title\": \"Too many requests\",\n  \"status\": 429,\n  \"detail\": \"Retry after 5 seconds.\"\n}",
+          "id": "41320c17-cd37-4494-a2bd-83a5ffe48cdc"
+        }
+      ],
+      "id": "8d0d828d-1331-4097-90e4-f58c7aef455c"
+    },
+    {
+      "name": "GET /identities/{id}/kyc",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text",
+            "description": {
+              "content": "Request body MIME type.",
+              "type": "text/plain"
+            }
+          },
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text",
+            "description": {
+              "content": "Desired response MIME type.",
+              "type": "text/plain"
+            }
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/identities/{{identity_id}}/kyc",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "identities",
+            "{{identity_id}}",
+            "kyc"
+          ]
+        },
+        "description": "Get KYC status\n\n### Auth\n\nOAuth 2.0 client credentials. Scope: `read`.\n\n### Notes\n\nCorrelation ID is auto-injected by the pre-request script.",
+        "auth": {
+          "type": "oauth2"
+        },
+        "response": [
+          {
+            "name": "Success 200",
+            "originalRequest": {
+              "method": "GET",
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                }
+              ],
+              "url": {
+                "raw": "{{base_url}}/identities/{{identity_id}}/kyc",
+                "host": [
+                  "{{base_url}}"
+                ],
+                "path": [
+                  "identities",
+                  "{id}",
+                  "kyc"
+                ]
+              }
+            },
+            "status": "OK",
+            "code": 200,
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": "{\n  \"id\": \"idt_01HXYZ64DB64FEAAFB404F92\",\n  \"created_at\": \"2026-04-21T14:30:00Z\",\n  \"updated_at\": \"2026-04-21T15:00:00Z\",\n  \"status\": \"completed\",\n  \"legal_name\": \"Jordan Alvarez\",\n  \"email\": \"jordan@example.com\",\n  \"kyc_status\": \"approved\",\n  \"country\": \"US\"\n}",
+            "_postman_previewlanguage": "json"
+          },
+          {
+            "name": "Validation error 422",
+            "originalRequest": {
+              "method": "GET",
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                }
+              ],
+              "url": {
+                "raw": "{{base_url}}/identities/{{identity_id}}/kyc",
+                "host": [
+                  "{{base_url}}"
+                ],
+                "path": [
+                  "identities",
+                  "{id}",
+                  "kyc"
+                ]
+              }
+            },
+            "status": "Unprocessable Entity",
+            "code": 422,
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/problem+json"
+              }
+            ],
+            "body": "{\n  \"type\": \"https://errors.meridianfs.example/validation\",\n  \"title\": \"Validation failed\",\n  \"status\": 422,\n  \"detail\": \"The `amount_minor` field must be a positive integer.\",\n  \"correlation_id\": \"cor_01HXYZABCDEFG\"\n}"
+          },
+          {
+            "name": "Rate limited 429",
+            "originalRequest": {
+              "method": "GET",
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                }
+              ],
+              "url": {
+                "raw": "{{base_url}}/identities/{{identity_id}}/kyc",
+                "host": [
+                  "{{base_url}}"
+                ],
+                "path": [
+                  "identities",
+                  "{id}",
+                  "kyc"
+                ]
+              }
+            },
+            "status": "Too Many Requests",
+            "code": 429,
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/problem+json"
+              },
+              {
+                "key": "Retry-After",
+                "value": "5"
+              }
+            ],
+            "body": "{\n  \"type\": \"https://errors.meridianfs.example/rate-limit\",\n  \"title\": \"Too many requests\",\n  \"status\": 429,\n  \"detail\": \"Retry after 5 seconds.\"\n}"
+          }
+        ]
+      },
+      "response": [
+        {
+          "name": "Success 200",
+          "originalRequest": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/identities/{{identity_id}}/kyc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "identities",
+                "{id}",
+                "kyc"
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"id\": \"idt_01HXYZ64DB64FEAAFB404F92\",\n  \"created_at\": \"2026-04-21T14:30:00Z\",\n  \"updated_at\": \"2026-04-21T15:00:00Z\",\n  \"status\": \"completed\",\n  \"legal_name\": \"Jordan Alvarez\",\n  \"email\": \"jordan@example.com\",\n  \"kyc_status\": \"approved\",\n  \"country\": \"US\"\n}",
+          "_postman_previewlanguage": "json",
+          "id": "a7e6d509-7a6d-4f70-9486-e5f196fa9ebb"
+        },
+        {
+          "name": "Validation error 422",
+          "originalRequest": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/identities/{{identity_id}}/kyc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "identities",
+                "{id}",
+                "kyc"
+              ]
+            }
+          },
+          "status": "Unprocessable Entity",
+          "code": 422,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/problem+json"
+            }
+          ],
+          "body": "{\n  \"type\": \"https://errors.meridianfs.example/validation\",\n  \"title\": \"Validation failed\",\n  \"status\": 422,\n  \"detail\": \"The `amount_minor` field must be a positive integer.\",\n  \"correlation_id\": \"cor_01HXYZABCDEFG\"\n}",
+          "id": "6d1f44ba-4cb2-4094-a860-1661ab01ed02"
+        },
+        {
+          "name": "Rate limited 429",
+          "originalRequest": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/identities/{{identity_id}}/kyc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "identities",
+                "{id}",
+                "kyc"
+              ]
+            }
+          },
+          "status": "Too Many Requests",
+          "code": 429,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/problem+json"
+            },
+            {
+              "key": "Retry-After",
+              "value": "5"
+            }
+          ],
+          "body": "{\n  \"type\": \"https://errors.meridianfs.example/rate-limit\",\n  \"title\": \"Too many requests\",\n  \"status\": 429,\n  \"detail\": \"Retry after 5 seconds.\"\n}",
+          "id": "409516ab-a2a2-4ca2-a615-20fb95ce43a2"
+        }
+      ],
+      "id": "a02fa291-52ed-4556-8aeb-42f6a133761f"
+    },
+    {
+      "name": "GET /identities/{id}/sensitive",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text",
+            "description": {
+              "content": "Request body MIME type.",
+              "type": "text/plain"
+            }
+          },
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text",
+            "description": {
+              "content": "Desired response MIME type.",
+              "type": "text/plain"
+            }
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/identities/{{identity_id}}/sensitive",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "identities",
+            "{{identity_id}}",
+            "sensitive"
+          ]
+        },
+        "description": "Retrieve PII (audited)\n\n### Auth\n\nOAuth 2.0 client credentials. Scope: `read`.\n\n### Notes\n\nCorrelation ID is auto-injected by the pre-request script.",
+        "auth": {
+          "type": "oauth2"
+        },
+        "response": [
+          {
+            "name": "Success 200",
+            "originalRequest": {
+              "method": "GET",
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                }
+              ],
+              "url": {
+                "raw": "{{base_url}}/identities/{{identity_id}}/sensitive",
+                "host": [
+                  "{{base_url}}"
+                ],
+                "path": [
+                  "identities",
+                  "{id}",
+                  "sensitive"
+                ]
+              }
+            },
+            "status": "OK",
+            "code": 200,
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": "{\n  \"id\": \"idt_01HXYZ4A540959B9574BBF8B\",\n  \"created_at\": \"2026-04-21T14:30:00Z\",\n  \"updated_at\": \"2026-04-21T15:00:00Z\",\n  \"status\": \"completed\",\n  \"legal_name\": \"Jordan Alvarez\",\n  \"email\": \"jordan@example.com\",\n  \"kyc_status\": \"approved\",\n  \"country\": \"US\"\n}",
+            "_postman_previewlanguage": "json"
+          },
+          {
+            "name": "Validation error 422",
+            "originalRequest": {
+              "method": "GET",
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                }
+              ],
+              "url": {
+                "raw": "{{base_url}}/identities/{{identity_id}}/sensitive",
+                "host": [
+                  "{{base_url}}"
+                ],
+                "path": [
+                  "identities",
+                  "{id}",
+                  "sensitive"
+                ]
+              }
+            },
+            "status": "Unprocessable Entity",
+            "code": 422,
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/problem+json"
+              }
+            ],
+            "body": "{\n  \"type\": \"https://errors.meridianfs.example/validation\",\n  \"title\": \"Validation failed\",\n  \"status\": 422,\n  \"detail\": \"The `amount_minor` field must be a positive integer.\",\n  \"correlation_id\": \"cor_01HXYZABCDEFG\"\n}"
+          },
+          {
+            "name": "Rate limited 429",
+            "originalRequest": {
+              "method": "GET",
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                }
+              ],
+              "url": {
+                "raw": "{{base_url}}/identities/{{identity_id}}/sensitive",
+                "host": [
+                  "{{base_url}}"
+                ],
+                "path": [
+                  "identities",
+                  "{id}",
+                  "sensitive"
+                ]
+              }
+            },
+            "status": "Too Many Requests",
+            "code": 429,
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/problem+json"
+              },
+              {
+                "key": "Retry-After",
+                "value": "5"
+              }
+            ],
+            "body": "{\n  \"type\": \"https://errors.meridianfs.example/rate-limit\",\n  \"title\": \"Too many requests\",\n  \"status\": 429,\n  \"detail\": \"Retry after 5 seconds.\"\n}"
+          }
+        ]
+      },
+      "response": [
+        {
+          "name": "Success 200",
+          "originalRequest": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/identities/{{identity_id}}/sensitive",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "identities",
+                "{id}",
+                "sensitive"
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"id\": \"idt_01HXYZ4A540959B9574BBF8B\",\n  \"created_at\": \"2026-04-21T14:30:00Z\",\n  \"updated_at\": \"2026-04-21T15:00:00Z\",\n  \"status\": \"completed\",\n  \"legal_name\": \"Jordan Alvarez\",\n  \"email\": \"jordan@example.com\",\n  \"kyc_status\": \"approved\",\n  \"country\": \"US\"\n}",
+          "_postman_previewlanguage": "json",
+          "id": "cb1d6ae5-b6c4-4391-afc3-2bb4021e59bc"
+        },
+        {
+          "name": "Validation error 422",
+          "originalRequest": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/identities/{{identity_id}}/sensitive",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "identities",
+                "{id}",
+                "sensitive"
+              ]
+            }
+          },
+          "status": "Unprocessable Entity",
+          "code": 422,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/problem+json"
+            }
+          ],
+          "body": "{\n  \"type\": \"https://errors.meridianfs.example/validation\",\n  \"title\": \"Validation failed\",\n  \"status\": 422,\n  \"detail\": \"The `amount_minor` field must be a positive integer.\",\n  \"correlation_id\": \"cor_01HXYZABCDEFG\"\n}",
+          "id": "d763e4c2-b365-4f0e-a5db-c9a15eeda597"
+        },
+        {
+          "name": "Rate limited 429",
+          "originalRequest": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/identities/{{identity_id}}/sensitive",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "identities",
+                "{id}",
+                "sensitive"
+              ]
+            }
+          },
+          "status": "Too Many Requests",
+          "code": 429,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/problem+json"
+            },
+            {
+              "key": "Retry-After",
+              "value": "5"
+            }
+          ],
+          "body": "{\n  \"type\": \"https://errors.meridianfs.example/rate-limit\",\n  \"title\": \"Too many requests\",\n  \"status\": 429,\n  \"detail\": \"Retry after 5 seconds.\"\n}",
+          "id": "16320bae-1c0b-43c1-a134-3551ea51b64b"
+        }
+      ],
+      "id": "81a16bc0-f247-489a-a32c-8aedeef16165"
+    },
+    {
+      "name": "POST /tokens",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text",
+            "description": {
+              "content": "Request body MIME type.",
+              "type": "text/plain"
+            }
+          },
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text",
+            "description": {
+              "content": "Desired response MIME type.",
+              "type": "text/plain"
+            }
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{$guid}}",
+            "type": "text",
+            "description": {
+              "content": "Unique key making this request safe to retry. UUID v4.",
+              "type": "text/plain"
+            }
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/tokens",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "tokens"
+          ]
+        },
+        "description": "Issue a short-lived access token\n\n### Auth\n\nOAuth 2.0 client credentials. Scope: `write`.\n\n### Notes\n\nCorrelation ID is auto-injected by the pre-request script.",
+        "auth": {
+          "type": "oauth2"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"legal_name\": \"Jordan Alvarez\",\n  \"email\": \"jordan@example.com\",\n  \"country\": \"US\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "response": [
+          {
+            "name": "Success 201",
+            "originalRequest": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                }
+              ],
+              "url": {
+                "raw": "{{base_url}}/tokens",
+                "host": [
+                  "{{base_url}}"
+                ],
+                "path": [
+                  "tokens"
+                ]
+              }
+            },
+            "status": "Created",
+            "code": 201,
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": "{\n  \"id\": \"idt_01HXYZAEA6478A55904FBC87\",\n  \"created_at\": \"2026-04-21T14:30:00Z\",\n  \"updated_at\": \"2026-04-21T15:00:00Z\",\n  \"status\": \"completed\",\n  \"legal_name\": \"Jordan Alvarez\",\n  \"email\": \"jordan@example.com\",\n  \"kyc_status\": \"approved\",\n  \"country\": \"US\"\n}",
+            "_postman_previewlanguage": "json"
+          },
+          {
+            "name": "Validation error 422",
+            "originalRequest": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                }
+              ],
+              "url": {
+                "raw": "{{base_url}}/tokens",
+                "host": [
+                  "{{base_url}}"
+                ],
+                "path": [
+                  "tokens"
+                ]
+              }
+            },
+            "status": "Unprocessable Entity",
+            "code": 422,
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/problem+json"
+              }
+            ],
+            "body": "{\n  \"type\": \"https://errors.meridianfs.example/validation\",\n  \"title\": \"Validation failed\",\n  \"status\": 422,\n  \"detail\": \"The `amount_minor` field must be a positive integer.\",\n  \"correlation_id\": \"cor_01HXYZABCDEFG\"\n}"
+          },
+          {
+            "name": "Rate limited 429",
+            "originalRequest": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "Accept",
+                  "value": "application/json"
+                }
+              ],
+              "url": {
+                "raw": "{{base_url}}/tokens",
+                "host": [
+                  "{{base_url}}"
+                ],
+                "path": [
+                  "tokens"
+                ]
+              }
+            },
+            "status": "Too Many Requests",
+            "code": 429,
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/problem+json"
+              },
+              {
+                "key": "Retry-After",
+                "value": "5"
+              }
+            ],
+            "body": "{\n  \"type\": \"https://errors.meridianfs.example/rate-limit\",\n  \"title\": \"Too many requests\",\n  \"status\": 429,\n  \"detail\": \"Retry after 5 seconds.\"\n}"
+          }
+        ]
+      },
+      "response": [
+        {
+          "name": "Success 201",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tokens",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tokens"
+              ]
+            }
+          },
+          "status": "Created",
+          "code": 201,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"id\": \"idt_01HXYZAEA6478A55904FBC87\",\n  \"created_at\": \"2026-04-21T14:30:00Z\",\n  \"updated_at\": \"2026-04-21T15:00:00Z\",\n  \"status\": \"completed\",\n  \"legal_name\": \"Jordan Alvarez\",\n  \"email\": \"jordan@example.com\",\n  \"kyc_status\": \"approved\",\n  \"country\": \"US\"\n}",
+          "_postman_previewlanguage": "json",
+          "id": "0e656160-986e-47bb-93fd-16ac038931aa"
+        },
+        {
+          "name": "Validation error 422",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tokens",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tokens"
+              ]
+            }
+          },
+          "status": "Unprocessable Entity",
+          "code": 422,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/problem+json"
+            }
+          ],
+          "body": "{\n  \"type\": \"https://errors.meridianfs.example/validation\",\n  \"title\": \"Validation failed\",\n  \"status\": 422,\n  \"detail\": \"The `amount_minor` field must be a positive integer.\",\n  \"correlation_id\": \"cor_01HXYZABCDEFG\"\n}",
+          "id": "ab5c2276-bff0-4fe6-8737-33fad8cc986d"
+        },
+        {
+          "name": "Rate limited 429",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tokens",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tokens"
+              ]
+            }
+          },
+          "status": "Too Many Requests",
+          "code": 429,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/problem+json"
+            },
+            {
+              "key": "Retry-After",
+              "value": "5"
+            }
+          ],
+          "body": "{\n  \"type\": \"https://errors.meridianfs.example/rate-limit\",\n  \"title\": \"Too many requests\",\n  \"status\": 429,\n  \"detail\": \"Retry after 5 seconds.\"\n}",
+          "id": "df939071-e119-45ec-a359-21299fad125f"
+        }
+      ],
+      "id": "8f3de1ff-ec22-4cbe-812b-709d7bb540c6"
+    }
+  ]
+}

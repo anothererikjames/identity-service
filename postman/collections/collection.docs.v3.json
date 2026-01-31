@@ -1,0 +1,441 @@
+{
+  "info": {
+    "name": "Meridian – Identity – Docs",
+    "description": "KYC/KYB identity verification and short-lived auth token issuance for the Meridian platform.\n\n## Purpose\n\nDocumentation collection — the consumer-facing surface.\n\n## Getting started\n\nObtain OAuth 2.0 client credentials from the Meridian developer portal, then exchange for an access token. See `Authentication` for full detail.\n\n## Consumers\n\n- External integrators\n- Solutions engineering\n\n## Conventions\n\n- Every folder maps 1:1 to a resource\n- Every request has rich markdown documentation",
+    "schema": "https://schema.postman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "d41d31c5-43f1-44d7-ae3d-cbe888580d02"
+  },
+  "auth": {
+    "type": "oauth2",
+    "oauth2": [
+      {
+        "key": "grant_type",
+        "value": "client_credentials",
+        "type": "string"
+      },
+      {
+        "key": "accessTokenUrl",
+        "value": "https://auth.meridianfs.example/oauth2/token",
+        "type": "string"
+      },
+      {
+        "key": "clientId",
+        "value": "{{client_id}}",
+        "type": "string"
+      },
+      {
+        "key": "clientSecret",
+        "value": "{{client_secret}}",
+        "type": "string"
+      },
+      {
+        "key": "scope",
+        "value": "read write",
+        "type": "string"
+      },
+      {
+        "key": "tokenName",
+        "value": "meridian-access-token",
+        "type": "string"
+      },
+      {
+        "key": "addTokenTo",
+        "value": "header",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Generate fresh Idempotency-Key for mutating requests",
+          "if (['POST','PUT','PATCH','DELETE'].indexOf(pm.request.method) !== -1) {",
+          "  pm.request.headers.upsert({key:'Idempotency-Key', value: pm.variables.replaceIn('{{$guid}}')});",
+          "}",
+          "// Correlation ID for Repro Mode",
+          "pm.request.headers.upsert({key:'X-Correlation-Id', value: pm.variables.replaceIn('cor_{{$guid}}')});"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "{{base_url}}",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "GET /identities",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text",
+            "description": {
+              "content": "Request body MIME type.",
+              "type": "text/plain"
+            }
+          },
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text",
+            "description": {
+              "content": "Desired response MIME type.",
+              "type": "text/plain"
+            }
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/identities",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "identities"
+          ],
+          "query": [
+            {
+              "key": "limit",
+              "value": "25",
+              "disabled": true,
+              "description": "Maximum items per page (1-100)."
+            },
+            {
+              "key": "cursor",
+              "value": "",
+              "disabled": true,
+              "description": "Opaque cursor from previous page's next_cursor."
+            },
+            {
+              "key": "status",
+              "value": "completed",
+              "disabled": true,
+              "description": "Filter by lifecycle status."
+            }
+          ]
+        },
+        "description": "List identities\n\n### Auth\n\nOAuth 2.0 client credentials. Scope: `read`.\n\n### Notes\n\nCorrelation ID is auto-injected by the pre-request script.",
+        "auth": {
+          "type": "oauth2"
+        }
+      },
+      "response": [],
+      "id": "66aab71b-3ec9-4ca6-b0e9-18b8ced6ff54"
+    },
+    {
+      "name": "POST /identities",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text",
+            "description": {
+              "content": "Request body MIME type.",
+              "type": "text/plain"
+            }
+          },
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text",
+            "description": {
+              "content": "Desired response MIME type.",
+              "type": "text/plain"
+            }
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{$guid}}",
+            "type": "text",
+            "description": {
+              "content": "Unique key making this request safe to retry. UUID v4.",
+              "type": "text/plain"
+            }
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/identities",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "identities"
+          ]
+        },
+        "description": "Register a new identity\n\n### Auth\n\nOAuth 2.0 client credentials. Scope: `write`.\n\n### Notes\n\nCorrelation ID is auto-injected by the pre-request script.",
+        "auth": {
+          "type": "oauth2"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"legal_name\": \"Jordan Alvarez\",\n  \"email\": \"jordan@example.com\",\n  \"country\": \"US\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": [],
+      "id": "1689eab8-3833-4e35-8d0a-c969070293e0"
+    },
+    {
+      "name": "GET /identities/{id}",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text",
+            "description": {
+              "content": "Request body MIME type.",
+              "type": "text/plain"
+            }
+          },
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text",
+            "description": {
+              "content": "Desired response MIME type.",
+              "type": "text/plain"
+            }
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/identities/{{identity_id}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "identities",
+            "{{identity_id}}"
+          ]
+        },
+        "description": "Retrieve an identity\n\n### Auth\n\nOAuth 2.0 client credentials. Scope: `read`.\n\n### Notes\n\nCorrelation ID is auto-injected by the pre-request script.",
+        "auth": {
+          "type": "oauth2"
+        }
+      },
+      "response": [],
+      "id": "294031e1-d667-4ae3-8ae5-ab0b1a070719"
+    },
+    {
+      "name": "POST /identities/{id}/kyc",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text",
+            "description": {
+              "content": "Request body MIME type.",
+              "type": "text/plain"
+            }
+          },
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text",
+            "description": {
+              "content": "Desired response MIME type.",
+              "type": "text/plain"
+            }
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{$guid}}",
+            "type": "text",
+            "description": {
+              "content": "Unique key making this request safe to retry. UUID v4.",
+              "type": "text/plain"
+            }
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/identities/{{identity_id}}/kyc",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "identities",
+            "{{identity_id}}",
+            "kyc"
+          ]
+        },
+        "description": "Start a KYC check\n\n### Auth\n\nOAuth 2.0 client credentials. Scope: `write`.\n\n### Notes\n\nCorrelation ID is auto-injected by the pre-request script.",
+        "auth": {
+          "type": "oauth2"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"legal_name\": \"Jordan Alvarez\",\n  \"email\": \"jordan@example.com\",\n  \"country\": \"US\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": [],
+      "id": "c8287223-40e8-4502-a09a-889fa775d490"
+    },
+    {
+      "name": "GET /identities/{id}/kyc",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text",
+            "description": {
+              "content": "Request body MIME type.",
+              "type": "text/plain"
+            }
+          },
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text",
+            "description": {
+              "content": "Desired response MIME type.",
+              "type": "text/plain"
+            }
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/identities/{{identity_id}}/kyc",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "identities",
+            "{{identity_id}}",
+            "kyc"
+          ]
+        },
+        "description": "Get KYC status\n\n### Auth\n\nOAuth 2.0 client credentials. Scope: `read`.\n\n### Notes\n\nCorrelation ID is auto-injected by the pre-request script.",
+        "auth": {
+          "type": "oauth2"
+        }
+      },
+      "response": [],
+      "id": "50a9f2ab-fdf5-47be-aaef-b8e6c6c098f2"
+    },
+    {
+      "name": "GET /identities/{id}/sensitive",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text",
+            "description": {
+              "content": "Request body MIME type.",
+              "type": "text/plain"
+            }
+          },
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text",
+            "description": {
+              "content": "Desired response MIME type.",
+              "type": "text/plain"
+            }
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/identities/{{identity_id}}/sensitive",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "identities",
+            "{{identity_id}}",
+            "sensitive"
+          ]
+        },
+        "description": "Retrieve PII (audited)\n\n### Auth\n\nOAuth 2.0 client credentials. Scope: `read`.\n\n### Notes\n\nCorrelation ID is auto-injected by the pre-request script.",
+        "auth": {
+          "type": "oauth2"
+        }
+      },
+      "response": [],
+      "id": "8a8ed31d-6bab-44bf-9ebf-451a8f5b8a69"
+    },
+    {
+      "name": "POST /tokens",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text",
+            "description": {
+              "content": "Request body MIME type.",
+              "type": "text/plain"
+            }
+          },
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text",
+            "description": {
+              "content": "Desired response MIME type.",
+              "type": "text/plain"
+            }
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{$guid}}",
+            "type": "text",
+            "description": {
+              "content": "Unique key making this request safe to retry. UUID v4.",
+              "type": "text/plain"
+            }
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/tokens",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "tokens"
+          ]
+        },
+        "description": "Issue a short-lived access token\n\n### Auth\n\nOAuth 2.0 client credentials. Scope: `write`.\n\n### Notes\n\nCorrelation ID is auto-injected by the pre-request script.",
+        "auth": {
+          "type": "oauth2"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"legal_name\": \"Jordan Alvarez\",\n  \"email\": \"jordan@example.com\",\n  \"country\": \"US\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": [],
+      "id": "93d9293e-4160-4428-ade8-d3bd282a5ad6"
+    }
+  ]
+}

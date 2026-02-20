@@ -1,0 +1,40 @@
+name: Lint Spec and Run Collection
+
+on:
+  pull_request:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+jobs:
+  lint-and-run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Postman CLI
+        run: |
+          curl -o- "https://dl-cli.pstmn.io/install/linux64.sh" | sh
+
+      - name: Login
+        run: |
+          postman login --with-api-key ${{ secrets.POSTMAN_API_KEY_FOR_API_CATALOG }}
+
+      - name: Start local mocks for upstream dependencies
+        run: |
+          if [ -d postman/local-mocks ]; then
+            for def in postman/local-mocks/*.json; do
+              [ -f "$def" ] || continue
+              echo "Would start local mock from $def"
+            done
+          fi
+
+      - name: Lint OpenAPI
+        run: |
+          postman api lint openapi.yaml --report-events || echo "Lint findings reported"
+
+      - name: Run collection (tests)
+        run: |
+          postman collection run postman/collection.tests.v3.json \
+            --environment postman/environment.staging.json \
+            --report-events

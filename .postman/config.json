@@ -1,0 +1,20 @@
+{
+  "workspace": {
+    "id": "48d5a9ce-5387-4042-9c27-6274c4c57c62"
+  },
+  "entities": {
+    "collections": [
+      "../postman/collections/Meridian – Identity – Examples_52238111-04aba0de-a4c7-43a7-8ab6-166e81e409af.postman_collection.json",
+      "../postman/collections/Meridian – Identity – Tests_52238111-086157c3-d477-49c2-bcf9-10f35eacc917.postman_collection.json",
+      "../postman/collections/Meridian – Identity – Docs_52238111-36cfe15b-96ea-4e33-9e45-a89bcd7095d8.postman_collection.json"
+    ],
+    "environments": [
+      "../postman/environments/identity-service.staging_52238111-c866099d-797b-4488-8626-5020ac4cac1c.postman_environment.json",
+      "../postman/environments/identity-service.dev_52238111-b869dfbc-95cd-4e01-81eb-0397570cc116.postman_environment.json",
+      "../postman/environments/identity-service.prod_52238111-81490521-d483-4505-b462-69978e067407.postman_environment.json"
+    ],
+    "specs": [],
+    "flows": [],
+    "globals": []
+  }
+}

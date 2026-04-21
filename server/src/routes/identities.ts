@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import seed from '../data/identities.json' with { type: 'json' };
+import seed from '../data/identities.json';
 
 
 export const router = Router();

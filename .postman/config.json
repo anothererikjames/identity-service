@@ -9,8 +9,8 @@
       "../postman/collections/Meridian – Identity – Docs_52238111-36cfe15b-96ea-4e33-9e45-a89bcd7095d8.postman_collection.json"
     ],
     "environments": [
-      "../postman/environments/identity-service.staging_52238111-c866099d-797b-4488-8626-5020ac4cac1c.postman_environment.json",
       "../postman/environments/identity-service.dev_52238111-b869dfbc-95cd-4e01-81eb-0397570cc116.postman_environment.json",
+      "../postman/environments/identity-service.staging_52238111-c866099d-797b-4488-8626-5020ac4cac1c.postman_environment.json",
       "../postman/environments/identity-service.prod_52238111-81490521-d483-4505-b462-69978e067407.postman_environment.json"
     ],
     "specs": [],

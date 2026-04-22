@@ -3,7 +3,7 @@
     "name": "Meridian \u2013 Identity \u2013 Tests",
     "description": "KYC/KYB identity verification and short-lived auth token issuance for the Meridian platform.\n\n## Purpose\n\nTests collection \u2014 exercises every endpoint with assertions.\n\n## Consumers\n\n- CI pipeline (nightly + on PR)\n- Local developer smoke-tests\n\n## Conventions\n\n- Pre-request script generates `Idempotency-Key` for mutating endpoints\n- Tests assert status, schema, a value-level field, and a response-time threshold",
     "schema": "https://schema.postman.com/json/collection/v2.1.0/collection.json",
-    "_postman_id": "c1f7bb62-807c-4b3d-bf56-f7f0f1860478"
+    "_postman_id": "086157c3-d477-49c2-bcf9-10f35eacc917"
   },
   "auth": {
     "type": "oauth2",

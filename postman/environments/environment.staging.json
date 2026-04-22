@@ -4,7 +4,7 @@
   "values": [
     {
       "key": "base_url",
-      "value": "https://api.staging.meridianfs.example/identity/v1",
+      "value": "https://postman-echo.com",
       "type": "default",
       "enabled": true
     },

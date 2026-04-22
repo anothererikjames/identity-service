@@ -33,15 +33,15 @@ jobs:
       - name: Login
         run: postman login --with-api-key "$POSTMAN_API_KEY"
       - name: Push workspace (source of truth)
-        run: postman workspace push --yes
+        run: postman workspace push --yes --report-events
       - name: Run tests collection (reports events to API Catalog)
         continue-on-error: true
         run: |
           postman collection run "52238111-086157c3-d477-49c2-bcf9-10f35eacc917" \
             --environment "52238111-c866099d-797b-4488-8626-5020ac4cac1c" \
-            --integration-id "$GITHUB_RUN_ID" \
+            --report-events \
             --verbose || true
-      - name: Lint spec
+      - name: Lint spec (Specs Lint tab)
         continue-on-error: true
-        run: postman spec lint openapi.yaml || true
+        run: postman spec lint openapi.yaml --fail-severity ERROR --output JSON --report-events || true
         working-directory: .

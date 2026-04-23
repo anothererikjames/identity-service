@@ -1,0 +1,45 @@
+{
+  "id": "f5696397-cec6-40a6-83de-a89792001fa0",
+  "name": "identity-service.prod",
+  "values": [
+    {
+      "key": "base_url",
+      "value": "https://api.prod.meridianfs.example/identity/v1",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "client_id",
+      "value": "cli_prod_demo",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "client_secret",
+      "value": "__REPLACE_ME__",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "webhook_secret",
+      "value": "whsec_prod_REPLACE_ME",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "identity_id",
+      "value": "idt_01HXYZ9FBDF3C3D691439288",
+      "type": "default",
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment",
+  "_postman_exported_at": "2026-04-21T00:00:00.000Z",
+  "_postman_exported_using": "Meridian generator"
+}

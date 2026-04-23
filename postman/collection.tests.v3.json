@@ -1,0 +1,616 @@
+{
+  "info": {
+    "name": "Meridian \u2013 Identity \u2013 Tests",
+    "description": "KYC/KYB identity verification and short-lived auth token issuance for the Meridian platform.\n\n## Purpose\n\nTests collection \u2014 exercises every endpoint with assertions.\n\n## Consumers\n\n- CI pipeline (nightly + on PR)\n- Local developer smoke-tests\n\n## Conventions\n\n- Pre-request script generates `Idempotency-Key` for mutating endpoints\n- Tests assert status, schema, a value-level field, and a response-time threshold",
+    "schema": "https://schema.postman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "7901c7d1-6c54-490b-b0ba-25d3de45dc05"
+  },
+  "auth": {
+    "type": "oauth2",
+    "oauth2": [
+      {
+        "key": "grant_type",
+        "value": "client_credentials",
+        "type": "string"
+      },
+      {
+        "key": "accessTokenUrl",
+        "value": "https://auth.meridianfs.example/oauth2/token",
+        "type": "string"
+      },
+      {
+        "key": "clientId",
+        "value": "{{client_id}}",
+        "type": "string"
+      },
+      {
+        "key": "clientSecret",
+        "value": "{{client_secret}}",
+        "type": "string"
+      },
+      {
+        "key": "scope",
+        "value": "read write",
+        "type": "string"
+      },
+      {
+        "key": "tokenName",
+        "value": "meridian-access-token",
+        "type": "string"
+      },
+      {
+        "key": "addTokenTo",
+        "value": "header",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Generate fresh Idempotency-Key for mutating requests",
+          "if (['POST','PUT','PATCH','DELETE'].indexOf(pm.request.method) !== -1) {",
+          "  pm.request.headers.upsert({key:'Idempotency-Key', value: pm.variables.replaceIn('{{$guid}}')});",
+          "}",
+          "// Correlation ID for Repro Mode",
+          "pm.request.headers.upsert({key:'X-Correlation-Id', value: pm.variables.replaceIn('cor_{{$guid}}')});"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "{{base_url}}",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "GET /identities",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text",
+            "description": {
+              "content": "Request body MIME type.",
+              "type": "text/plain"
+            }
+          },
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text",
+            "description": {
+              "content": "Desired response MIME type.",
+              "type": "text/plain"
+            }
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/identities",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "identities"
+          ],
+          "query": [
+            {
+              "key": "limit",
+              "value": "25",
+              "disabled": true,
+              "description": "Maximum items per page (1-100)."
+            },
+            {
+              "key": "cursor",
+              "value": "",
+              "disabled": true,
+              "description": "Opaque cursor from previous page's next_cursor."
+            },
+            {
+              "key": "status",
+              "value": "completed",
+              "disabled": true,
+              "description": "Filter by lifecycle status."
+            }
+          ]
+        },
+        "description": "List identities\n\n### Auth\n\nOAuth 2.0 client credentials. Scope: `read`.\n\n### Notes\n\nCorrelation ID is auto-injected by the pre-request script.",
+        "auth": {
+          "type": "oauth2"
+        },
+        "event": [
+          {
+            "listen": "test",
+            "script": {
+              "type": "text/javascript",
+              "exec": [
+                "pm.test('status 200', function () { pm.response.to.have.status(200); });",
+                "pm.test('content-type JSON', function () { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'); });",
+                "pm.test('response time < 800ms', function () { pm.expect(pm.response.responseTime).to.be.below(800); });",
+                "const j = pm.response.json();",
+                "pm.test('has id or data', function () { pm.expect(j).to.satisfy(v => 'id' in v || 'data' in v); });",
+                "pm.test('matches identity schema', function () {",
+                "  const schema = {",
+                "    type: 'object', required: ['id','created_at','status'],",
+                "    properties: {",
+                "      id: { type: 'string', pattern: '^idt_' },",
+                "      created_at: { type: 'string' },",
+                "      status: { type: 'string' },",
+                "    },",
+                "  };",
+                "  if ('id' in j) pm.expect(tv4.validate(j, schema, true, false)).to.be.true;",
+                "});"
+              ]
+            }
+          }
+        ]
+      },
+      "response": []
+    },
+    {
+      "name": "POST /identities",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text",
+            "description": {
+              "content": "Request body MIME type.",
+              "type": "text/plain"
+            }
+          },
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text",
+            "description": {
+              "content": "Desired response MIME type.",
+              "type": "text/plain"
+            }
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{$guid}}",
+            "type": "text",
+            "description": {
+              "content": "Unique key making this request safe to retry. UUID v4.",
+              "type": "text/plain"
+            }
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/identities",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "identities"
+          ]
+        },
+        "description": "Register a new identity\n\n### Auth\n\nOAuth 2.0 client credentials. Scope: `write`.\n\n### Notes\n\nCorrelation ID is auto-injected by the pre-request script.",
+        "auth": {
+          "type": "oauth2"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"legal_name\": \"Jordan Alvarez\",\n  \"email\": \"jordan@example.com\",\n  \"country\": \"US\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "event": [
+          {
+            "listen": "test",
+            "script": {
+              "type": "text/javascript",
+              "exec": [
+                "pm.test('status 201', function () { pm.response.to.have.status(201); });",
+                "pm.test('content-type JSON', function () { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'); });",
+                "pm.test('response time < 800ms', function () { pm.expect(pm.response.responseTime).to.be.below(800); });",
+                "const j = pm.response.json();",
+                "pm.test('has id or data', function () { pm.expect(j).to.satisfy(v => 'id' in v || 'data' in v); });",
+                "pm.test('matches identity schema', function () {",
+                "  const schema = {",
+                "    type: 'object', required: ['id','created_at','status'],",
+                "    properties: {",
+                "      id: { type: 'string', pattern: '^idt_' },",
+                "      created_at: { type: 'string' },",
+                "      status: { type: 'string' },",
+                "    },",
+                "  };",
+                "  if ('id' in j) pm.expect(tv4.validate(j, schema, true, false)).to.be.true;",
+                "});"
+              ]
+            }
+          }
+        ]
+      },
+      "response": []
+    },
+    {
+      "name": "GET /identities/{id}",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text",
+            "description": {
+              "content": "Request body MIME type.",
+              "type": "text/plain"
+            }
+          },
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text",
+            "description": {
+              "content": "Desired response MIME type.",
+              "type": "text/plain"
+            }
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/identities/{{{identity_id}}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "identities",
+            "{{identity_id}}"
+          ]
+        },
+        "description": "Retrieve an identity\n\n### Auth\n\nOAuth 2.0 client credentials. Scope: `read`.\n\n### Notes\n\nCorrelation ID is auto-injected by the pre-request script.",
+        "auth": {
+          "type": "oauth2"
+        },
+        "event": [
+          {
+            "listen": "test",
+            "script": {
+              "type": "text/javascript",
+              "exec": [
+                "pm.test('status 200', function () { pm.response.to.have.status(200); });",
+                "pm.test('content-type JSON', function () { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'); });",
+                "pm.test('response time < 800ms', function () { pm.expect(pm.response.responseTime).to.be.below(800); });",
+                "const j = pm.response.json();",
+                "pm.test('has id or data', function () { pm.expect(j).to.satisfy(v => 'id' in v || 'data' in v); });",
+                "pm.test('matches identity schema', function () {",
+                "  const schema = {",
+                "    type: 'object', required: ['id','created_at','status'],",
+                "    properties: {",
+                "      id: { type: 'string', pattern: '^idt_' },",
+                "      created_at: { type: 'string' },",
+                "      status: { type: 'string' },",
+                "    },",
+                "  };",
+                "  if ('id' in j) pm.expect(tv4.validate(j, schema, true, false)).to.be.true;",
+                "});"
+              ]
+            }
+          }
+        ]
+      },
+      "response": []
+    },
+    {
+      "name": "POST /identities/{id}/kyc",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text",
+            "description": {
+              "content": "Request body MIME type.",
+              "type": "text/plain"
+            }
+          },
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text",
+            "description": {
+              "content": "Desired response MIME type.",
+              "type": "text/plain"
+            }
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{$guid}}",
+            "type": "text",
+            "description": {
+              "content": "Unique key making this request safe to retry. UUID v4.",
+              "type": "text/plain"
+            }
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/identities/{{{identity_id}}}/kyc",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "identities",
+            "{{identity_id}}",
+            "kyc"
+          ]
+        },
+        "description": "Start a KYC check\n\n### Auth\n\nOAuth 2.0 client credentials. Scope: `write`.\n\n### Notes\n\nCorrelation ID is auto-injected by the pre-request script.",
+        "auth": {
+          "type": "oauth2"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"legal_name\": \"Jordan Alvarez\",\n  \"email\": \"jordan@example.com\",\n  \"country\": \"US\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "event": [
+          {
+            "listen": "test",
+            "script": {
+              "type": "text/javascript",
+              "exec": [
+                "pm.test('status 201', function () { pm.response.to.have.status(201); });",
+                "pm.test('content-type JSON', function () { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'); });",
+                "pm.test('response time < 800ms', function () { pm.expect(pm.response.responseTime).to.be.below(800); });",
+                "const j = pm.response.json();",
+                "pm.test('has id or data', function () { pm.expect(j).to.satisfy(v => 'id' in v || 'data' in v); });",
+                "pm.test('matches identity schema', function () {",
+                "  const schema = {",
+                "    type: 'object', required: ['id','created_at','status'],",
+                "    properties: {",
+                "      id: { type: 'string', pattern: '^idt_' },",
+                "      created_at: { type: 'string' },",
+                "      status: { type: 'string' },",
+                "    },",
+                "  };",
+                "  if ('id' in j) pm.expect(tv4.validate(j, schema, true, false)).to.be.true;",
+                "});"
+              ]
+            }
+          }
+        ]
+      },
+      "response": []
+    },
+    {
+      "name": "GET /identities/{id}/kyc",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text",
+            "description": {
+              "content": "Request body MIME type.",
+              "type": "text/plain"
+            }
+          },
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text",
+            "description": {
+              "content": "Desired response MIME type.",
+              "type": "text/plain"
+            }
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/identities/{{{identity_id}}}/kyc",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "identities",
+            "{{identity_id}}",
+            "kyc"
+          ]
+        },
+        "description": "Get KYC status\n\n### Auth\n\nOAuth 2.0 client credentials. Scope: `read`.\n\n### Notes\n\nCorrelation ID is auto-injected by the pre-request script.",
+        "auth": {
+          "type": "oauth2"
+        },
+        "event": [
+          {
+            "listen": "test",
+            "script": {
+              "type": "text/javascript",
+              "exec": [
+                "pm.test('status 200', function () { pm.response.to.have.status(200); });",
+                "pm.test('content-type JSON', function () { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'); });",
+                "pm.test('response time < 800ms', function () { pm.expect(pm.response.responseTime).to.be.below(800); });",
+                "const j = pm.response.json();",
+                "pm.test('has id or data', function () { pm.expect(j).to.satisfy(v => 'id' in v || 'data' in v); });",
+                "pm.test('matches identity schema', function () {",
+                "  const schema = {",
+                "    type: 'object', required: ['id','created_at','status'],",
+                "    properties: {",
+                "      id: { type: 'string', pattern: '^idt_' },",
+                "      created_at: { type: 'string' },",
+                "      status: { type: 'string' },",
+                "    },",
+                "  };",
+                "  if ('id' in j) pm.expect(tv4.validate(j, schema, true, false)).to.be.true;",
+                "});"
+              ]
+            }
+          }
+        ]
+      },
+      "response": []
+    },
+    {
+      "name": "GET /identities/{id}/sensitive",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text",
+            "description": {
+              "content": "Request body MIME type.",
+              "type": "text/plain"
+            }
+          },
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text",
+            "description": {
+              "content": "Desired response MIME type.",
+              "type": "text/plain"
+            }
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/identities/{{{identity_id}}}/sensitive",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "identities",
+            "{{identity_id}}",
+            "sensitive"
+          ]
+        },
+        "description": "Retrieve PII (audited)\n\n### Auth\n\nOAuth 2.0 client credentials. Scope: `read`.\n\n### Notes\n\nCorrelation ID is auto-injected by the pre-request script.",
+        "auth": {
+          "type": "oauth2"
+        },
+        "event": [
+          {
+            "listen": "test",
+            "script": {
+              "type": "text/javascript",
+              "exec": [
+                "pm.test('status 200', function () { pm.response.to.have.status(200); });",
+                "pm.test('content-type JSON', function () { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'); });",
+                "pm.test('response time < 800ms', function () { pm.expect(pm.response.responseTime).to.be.below(800); });",
+                "const j = pm.response.json();",
+                "pm.test('has id or data', function () { pm.expect(j).to.satisfy(v => 'id' in v || 'data' in v); });",
+                "pm.test('matches identity schema', function () {",
+                "  const schema = {",
+                "    type: 'object', required: ['id','created_at','status'],",
+                "    properties: {",
+                "      id: { type: 'string', pattern: '^idt_' },",
+                "      created_at: { type: 'string' },",
+                "      status: { type: 'string' },",
+                "    },",
+                "  };",
+                "  if ('id' in j) pm.expect(tv4.validate(j, schema, true, false)).to.be.true;",
+                "});"
+              ]
+            }
+          }
+        ]
+      },
+      "response": []
+    },
+    {
+      "name": "POST /tokens",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text",
+            "description": {
+              "content": "Request body MIME type.",
+              "type": "text/plain"
+            }
+          },
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text",
+            "description": {
+              "content": "Desired response MIME type.",
+              "type": "text/plain"
+            }
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{$guid}}",
+            "type": "text",
+            "description": {
+              "content": "Unique key making this request safe to retry. UUID v4.",
+              "type": "text/plain"
+            }
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/tokens",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "tokens"
+          ]
+        },
+        "description": "Issue a short-lived access token\n\n### Auth\n\nOAuth 2.0 client credentials. Scope: `write`.\n\n### Notes\n\nCorrelation ID is auto-injected by the pre-request script.",
+        "auth": {
+          "type": "oauth2"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"legal_name\": \"Jordan Alvarez\",\n  \"email\": \"jordan@example.com\",\n  \"country\": \"US\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "event": [
+          {
+            "listen": "test",
+            "script": {
+              "type": "text/javascript",
+              "exec": [
+                "pm.test('status 201', function () { pm.response.to.have.status(201); });",
+                "pm.test('content-type JSON', function () { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'); });",
+                "pm.test('response time < 800ms', function () { pm.expect(pm.response.responseTime).to.be.below(800); });",
+                "const j = pm.response.json();",
+                "pm.test('has id or data', function () { pm.expect(j).to.satisfy(v => 'id' in v || 'data' in v); });",
+                "pm.test('matches identity schema', function () {",
+                "  const schema = {",
+                "    type: 'object', required: ['id','created_at','status'],",
+                "    properties: {",
+                "      id: { type: 'string', pattern: '^idt_' },",
+                "      created_at: { type: 'string' },",
+                "      status: { type: 'string' },",
+                "    },",
+                "  };",
+                "  if ('id' in j) pm.expect(tv4.validate(j, schema, true, false)).to.be.true;",
+                "});"
+              ]
+            }
+          }
+        ]
+      },
+      "response": []
+    }
+  ]
+}

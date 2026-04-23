@@ -123,7 +123,7 @@
                     "value": {
                       "data": [
                         {
-                          "id": "idt_01HXYZ4DCDD305F868443C8E",
+                          "id": "idt_01HXYZ99C172585D8D47EC81",
                           "created_at": "2026-04-21T14:30:00Z",
                           "updated_at": "2026-04-21T15:00:00Z",
                           "status": "completed",
@@ -204,7 +204,7 @@
                   "typical": {
                     "summary": "Typical response",
                     "value": {
-                      "id": "idt_01HXYZ544E0D76D6B04B37A3",
+                      "id": "idt_01HXYZ3F5CC9332B4642819D",
                       "created_at": "2026-04-21T14:30:00Z",
                       "updated_at": "2026-04-21T15:00:00Z",
                       "status": "completed",
@@ -244,7 +244,7 @@
             "pattern": "^idt_[A-Za-z0-9]+$"
           },
           "description": "Unique identity identifier.",
-          "example": "idt_01HXYZ29CA82BA14174828B2"
+          "example": "idt_01HXYZB5B131D85C8F464CAA"
         }
       ],
       "get": {
@@ -267,7 +267,7 @@
                   "typical": {
                     "summary": "Typical response",
                     "value": {
-                      "id": "idt_01HXYZBE4FAB536E78478B9D",
+                      "id": "idt_01HXYZ4B67D4F8A214486BA1",
                       "created_at": "2026-04-21T14:30:00Z",
                       "updated_at": "2026-04-21T15:00:00Z",
                       "status": "completed",
@@ -307,7 +307,7 @@
             "pattern": "^idt_[A-Za-z0-9]+$"
           },
           "description": "Unique identity identifier.",
-          "example": "idt_01HXYZ2C8A3A9890B14CE298"
+          "example": "idt_01HXYZ1C2C4416EC734D438A"
         }
       ],
       "post": {
@@ -362,7 +362,7 @@
                   "typical": {
                     "summary": "Typical response",
                     "value": {
-                      "id": "idt_01HXYZ213096D6BBFA49ECA4",
+                      "id": "idt_01HXYZ6A6197CFB33B475F8E",
                       "created_at": "2026-04-21T14:30:00Z",
                       "updated_at": "2026-04-21T15:00:00Z",
                       "status": "completed",
@@ -413,7 +413,7 @@
                   "typical": {
                     "summary": "Typical response",
                     "value": {
-                      "id": "idt_01HXYZEFBD64B8214A4370B9",
+                      "id": "idt_01HXYZ790ED0F1A84142B6A0",
                       "created_at": "2026-04-21T14:30:00Z",
                       "updated_at": "2026-04-21T15:00:00Z",
                       "status": "completed",
@@ -453,7 +453,7 @@
             "pattern": "^idt_[A-Za-z0-9]+$"
           },
           "description": "Unique identity identifier.",
-          "example": "idt_01HXYZEBD698E4CE0247D4B0"
+          "example": "idt_01HXYZF9C19FA1102A4B13BA"
         }
       ],
       "get": {
@@ -476,7 +476,7 @@
                   "typical": {
                     "summary": "Typical response",
                     "value": {
-                      "id": "idt_01HXYZ5B1A057BEFED4DA18E",
+                      "id": "idt_01HXYZ405A2D7C06844ED0AE",
                       "created_at": "2026-04-21T14:30:00Z",
                       "updated_at": "2026-04-21T15:00:00Z",
                       "status": "completed",
@@ -558,7 +558,7 @@
                   "typical": {
                     "summary": "Typical response",
                     "value": {
-                      "id": "idt_01HXYZ34F668838D8844348A",
+                      "id": "idt_01HXYZ4E47055AD8E5429FB0",
                       "created_at": "2026-04-21T14:30:00Z",
                       "updated_at": "2026-04-21T15:00:00Z",
                       "status": "completed",
@@ -691,7 +691,7 @@
       "BadRequest": {
         "description": "Malformed request",
         "content": {
-          "application/json": {
+          "application/problem+json": {
             "schema": {
               "$ref": "#/components/schemas/Problem"
             }
@@ -701,7 +701,7 @@
       "Unauthorized": {
         "description": "Missing or invalid credentials",
         "content": {
-          "application/json": {
+          "application/problem+json": {
             "schema": {
               "$ref": "#/components/schemas/Problem"
             }
@@ -711,7 +711,7 @@
       "NotFound": {
         "description": "Resource not found",
         "content": {
-          "application/json": {
+          "application/problem+json": {
             "schema": {
               "$ref": "#/components/schemas/Problem"
             }
@@ -721,7 +721,7 @@
       "Conflict": {
         "description": "Conflicts with current state",
         "content": {
-          "application/json": {
+          "application/problem+json": {
             "schema": {
               "$ref": "#/components/schemas/Problem"
             }
@@ -731,7 +731,7 @@
       "Unprocessable": {
         "description": "Semantically invalid request",
         "content": {
-          "application/json": {
+          "application/problem+json": {
             "schema": {
               "$ref": "#/components/schemas/Problem"
             }
@@ -749,7 +749,7 @@
           }
         },
         "content": {
-          "application/json": {
+          "application/problem+json": {
             "schema": {
               "$ref": "#/components/schemas/Problem"
             }
@@ -792,7 +792,7 @@
             "type": "string",
             "format": "uri-reference",
             "description": "URI of this occurrence.",
-            "example": "/v1/identities/idt_01HXYZDCC1929CB8434979A3/capture"
+            "example": "/v1/identities/idt_01HXYZDCF7DBA2662542E0AE/capture"
           },
           "correlation_id": {
             "type": "string",
@@ -814,7 +814,7 @@
             "type": "string",
             "pattern": "^idt_[A-Za-z0-9]+$",
             "description": "Unique identity identifier.",
-            "example": "idt_01HXYZE2A8FB4AB7A948209C"
+            "example": "idt_01HXYZF7CB2E12EB8344738E"
           },
           "created_at": {
             "type": "string",
